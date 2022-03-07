@@ -1,4 +1,4 @@
-module github.com/coreservice-io/UECS
+module github.com/coreservice-io/UECSUploader
 
 go 1.17
 

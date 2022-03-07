@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/coreservice-io/LogrusULog"
-	"github.com/coreservice-io/UECS/uploader"
+	"github.com/coreservice-io/UECSUploader/uploader"
 	"github.com/coreservice-io/ULog"
 )
 

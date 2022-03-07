@@ -1,4 +1,4 @@
-# UECS
+# UECSUploader
 elastic/open search 
 
 ```
@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/coreservice-io/LogrusULog"
-	"github.com/coreservice-io/UECS/uploader"
+	"github.com/coreservice-io/UECS/UECSUploader"
 	"github.com/coreservice-io/ULog"
 )
 

@@ -1,6 +1,10 @@
 # UECSUploader
 elastic/open search 
 
+# Important!
+for each struct to upload must have a "Id" filed of type string/int/string/int8/int16/int32/int64
+otherwise it will fail
+
 ```
 //example
 

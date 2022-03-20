@@ -40,15 +40,17 @@ func (upl *Uploader) GenRandIdStr() string {
 func checkStringIdField(Iface interface{}) (string, error) {
 	ValueIface := reflect.ValueOf(Iface)
 
-	// Check if the passed interface is a pointer ,must be a pointer ,otherwise error
-	if ValueIface.Type().Kind() != reflect.Ptr {
-		return "", errors.New("checkStringIdField not pointer error")
-	}
-
-	// 'dereference' with Elem() and get the field by name
-	Field := ValueIface.Elem().FieldByName("Id")
-	if !Field.IsValid() {
-		return "", errors.New("error:Interface does not have the string Id field")
+	var Field reflect.Value
+	if ValueIface.Type().Kind() == reflect.Ptr {
+		Field = ValueIface.Elem().FieldByName("Id")
+		if !Field.IsValid() {
+			return "", errors.New("error:Interface does not have the string Id field")
+		}
+	} else {
+		Field = ValueIface.FieldByName("Id")
+		if !Field.IsValid() {
+			return "", errors.New("error:Interface does not have the string Id field")
+		}
 	}
 
 	var str_value string
@@ -56,16 +58,18 @@ func checkStringIdField(Iface interface{}) (string, error) {
 	switch {
 	case typestr == "string":
 		str_value = Field.String()
-	case typestr == "int", typestr == "int64", typestr == "int8", typestr == "int16", typestr == "int32":
+	case typestr == "int", typestr == "uint", typestr == "int64", typestr == "uint64",
+		typestr == "int8", typestr == "uint8", typestr == "int16", typestr == "uint16", typestr == "int32", typestr == "uint32":
 		str_value = strconv.FormatInt(Field.Int(), 10)
 	default:
-		return "", errors.New("err:Id type error only support int/int64/int16/int8")
+		return "", errors.New("err:Id type error only support string/int/uint/int8/uint8/int16/uint16/int32/uint32/int64/uint64")
 	}
 
 	trimvalue := strings.TrimSpace(str_value)
 	if trimvalue == "" {
 		return "", errors.New("error:Id string filed is vacant")
 	}
+
 	return trimvalue, nil
 }
 
@@ -88,8 +92,8 @@ func (upl *Uploader) GetULogger() ULog.Logger {
 	return upl.logger
 }
 
-func (upl *Uploader) AddLog_Async(indexName string, log interface{}) error {
-
+//logs may get lost if upload failed
+func (upl *Uploader) AddLog_Async_Unsafe(indexName string, log interface{}) error {
 	idstr, iderr := checkStringIdField(log)
 	if iderr != nil {
 		if upl.logger != nil {
@@ -97,7 +101,6 @@ func (upl *Uploader) AddLog_Async(indexName string, log interface{}) error {
 		}
 		return iderr
 	}
-
 	upl.logs_lock.Lock()
 	_, ok := upl.logs[indexName]
 	if !ok {
@@ -112,11 +115,22 @@ func (upl *Uploader) uploadLog_Async(indexName string) {
 	bulkRequest := upl.client.Bulk()
 	for {
 		toUploadSize := 0
+		toUploadDocs := make(map[string]interface{})
+
+		upl.logs_lock.Lock()
 		for k, v := range upl.logs[indexName] {
 			if toUploadSize >= UPLOAD_DEFAULT_SIZE {
 				break
 			}
 			toUploadSize++
+			toUploadDocs[k] = v
+		}
+
+		for k, v := range toUploadDocs {
+			if upl.logger != nil {
+				upl.logger.Debugln("uploadLog_Async delete local record to upload:", k)
+			}
+			delete(upl.logs[indexName], k)
 			reqi := elastic.NewBulkIndexRequest().Index(indexName).Doc(v).Id(k)
 			if upl.logger != nil {
 				upl.logger.Traceln("uploadAnyLog_Async add record ",
@@ -127,6 +141,7 @@ func (upl *Uploader) uploadLog_Async(indexName string) {
 			bulkRequest.Add(reqi)
 		}
 
+		upl.logs_lock.Unlock()
 		if toUploadSize > 0 {
 			if upl.logger != nil {
 				upl.logger.Debugln("uploadLog_Async  toUploadSize :", toUploadSize)
@@ -134,20 +149,15 @@ func (upl *Uploader) uploadLog_Async(indexName string) {
 			bulkresponse, _ := bulkRequest.Do(context.Background())
 			if len(bulkresponse.Failed()) > 0 {
 				time.Sleep(30 * time.Second)
-			}
-			if upl.logger != nil {
-				upl.logger.Debugln("uploadLog_Async  failed count :", len(bulkresponse.Failed()))
-			}
-
-			successList := bulkresponse.Succeeded()
-			upl.logs_lock.Lock()
-			for i := 0; i < len(successList); i++ {
 				if upl.logger != nil {
-					upl.logger.Debugln("uploadLog_Async delete succeeded record :", successList[i])
+					upl.logger.Errorln("uploadLog_Async failed count :", len(bulkresponse.Failed()))
 				}
-				delete(upl.logs[indexName], successList[i].Id)
 			}
-			upl.logs_lock.Unlock()
+			if len(bulkresponse.Succeeded()) > 0 {
+				if upl.logger != nil {
+					upl.logger.Debugln("uploadLog_Async succeeded count :", len(bulkresponse.Succeeded()))
+				}
+			}
 		}
 
 		//give warnings to system
@@ -187,6 +197,9 @@ func (upl *Uploader) AddLogs_Sync(indexName string, logs []interface{}) (succeed
 	succeeded := resp.Succeeded()
 	for i := 0; i < len(succeeded); i++ {
 		succeededIds = append(succeededIds, succeeded[i].Id)
+	}
+	if len(succeededIds) == 0 {
+		return succeededIds, errors.New("nothing uploaded error")
 	}
 	return succeededIds, nil
 }

@@ -3,7 +3,6 @@ package uploader
 import (
 	"context"
 	"errors"
-	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
@@ -17,24 +16,6 @@ import (
 )
 
 const uecs_uploader = "uecs_uploader"
-const letterBytes = "abcdefghijklmnopqrstuvwxyz"
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-func randStr(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
-	}
-	return string(b)
-}
-
-func (upl *Uploader) GenRandIdStr() string {
-	x := randStr(42)
-	return x
-}
 
 //if Id string field is ok ,return the trimed version of it
 func checkStringIdField(Iface interface{}) (string, error) {

@@ -3,7 +3,8 @@ elastic/open search
 
 #### Important!
 ```
-for each struct to upload must have a "Id" filed of type string/int/uint/int8/uint8/int16/uint16/int32/uint32/int64/uint64
+for each struct to upload must have a "Id" filed of type 
+string/int/uint/int8/uint8/int16/uint16/int32/uint32/int64/uint64
 otherwise it will fail
 ```
 

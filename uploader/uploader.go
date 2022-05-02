@@ -65,11 +65,11 @@ type Uploader struct {
 	logger       log.Logger
 }
 
-func (upl *Uploader) SetULogger(logger log.Logger) {
+func (upl *Uploader) SetLogger(logger log.Logger) {
 	upl.logger = logger
 }
 
-func (upl *Uploader) GetULogger() log.Logger {
+func (upl *Uploader) GetLogger() log.Logger {
 	return upl.logger
 }
 

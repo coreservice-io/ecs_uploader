@@ -43,7 +43,7 @@ func main() {
 	if err != nil {
 		return
 	} else {
-		ecs_uploader.SetULogger(llog)
+		ecs_uploader.SetLogger(llog)
 		sids, err := ecs_uploader.AddLogs_Sync("example", []interface{}{
 			&example{Id: 1, hex: "hex"},
 			&example{Id: 10, hex: "hexhex"},

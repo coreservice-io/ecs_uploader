@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coreservice-io/LogrusULog"
-	"github.com/coreservice-io/UECSUploader/uploader"
-	"github.com/coreservice-io/ULog"
+	"github.com/coreservice-io/ecs_uploader/uploader"
+	"github.com/coreservice-io/log"
+	"github.com/coreservice-io/logrus_log"
 )
 
 type example struct {
@@ -17,11 +17,11 @@ type example struct {
 func main() {
 
 	////
-	ulog, err := LogrusULog.New("./logs", 1, 20, 30)
+	llog, err := logrus_log.New("./logs", 1, 20, 30)
 	if err != nil {
 		panic(err.Error())
 	}
-	ulog.SetLevel(ULog.InfoLevel)
+	llog.SetLevel(log.InfoLevel)
 
 	ecs_endpoint := "xxxx"
 	ecs_account := "yyyy"
@@ -31,7 +31,7 @@ func main() {
 	if err != nil {
 		return
 	} else {
-		ecs_uploader.SetULogger(ulog)
+		ecs_uploader.SetULogger(llog)
 		sids, err := ecs_uploader.AddLogs_Sync("example", []interface{}{
 			&example{Id: 1, hex: "hex"},
 			&example{Id: 10, hex: "hexhex"},

@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreservice-io/UJob"
-	"github.com/coreservice-io/ULog"
-	"github.com/coreservice-io/USafeGo"
+	"github.com/coreservice-io/job"
+	"github.com/coreservice-io/log"
+	"github.com/coreservice-io/safe_go"
 	"github.com/olivere/elastic/v7"
 )
 
@@ -62,14 +62,14 @@ type Uploader struct {
 	logs         map[string]map[string]interface{}
 	logs_lock    sync.Mutex
 	logs_started sync.Map
-	logger       ULog.Logger
+	logger       log.Logger
 }
 
-func (upl *Uploader) SetULogger(logger ULog.Logger) {
+func (upl *Uploader) SetULogger(logger log.Logger) {
 	upl.logger = logger
 }
 
-func (upl *Uploader) GetULogger() ULog.Logger {
+func (upl *Uploader) GetULogger() log.Logger {
 	return upl.logger
 }
 
@@ -205,7 +205,7 @@ func New(endpoint string, username string, password string) (*Uploader, error) {
 		logs:   make(map[string]map[string]interface{}),
 	}
 
-	USafeGo.Go(
+	safe_go.Go(
 		// process
 		func(args ...interface{}) {
 			upl.start()
@@ -225,7 +225,7 @@ func (upl *Uploader) start() {
 			_, ok := upl.logs_started.Load(lmkindex)
 			if !ok {
 				upl.logs_started.Store(lmkindex, true)
-				UJob.Start(uecs_uploader,
+				job.Start(uecs_uploader,
 					func() {
 						// job process
 						upl.uploadLog_Async(lmkindex)
@@ -236,11 +236,11 @@ func (upl *Uploader) start() {
 						}
 						time.Sleep(30 * time.Second)
 					},
-					2, UJob.TYPE_PANIC_REDO,
-					func(job *UJob.Job) bool {
+					2, job.TYPE_PANIC_REDO,
+					func(job *job.Job) bool {
 						//check to continue
 						return true
-					}, func(inst *UJob.Job) {
+					}, func(inst *job.Job) {
 						//finally
 					},
 				)

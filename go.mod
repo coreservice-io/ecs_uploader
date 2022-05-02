@@ -1,12 +1,12 @@
-module github.com/coreservice-io/UECSUploader
+module github.com/coreservice-io/ecs_uploader
 
 go 1.17
 
 require (
-	github.com/coreservice-io/LogrusULog v0.1.19
-	github.com/coreservice-io/UJob v0.1.5
-	github.com/coreservice-io/ULog v0.1.17
-	github.com/coreservice-io/USafeGo v0.1.3
+	github.com/coreservice-io/job v0.1.20
+	github.com/coreservice-io/log v0.1.18
+	github.com/coreservice-io/logrus_log v0.1.20
+	github.com/coreservice-io/safe_go v0.1.4
 	github.com/olivere/elastic/v7 v7.0.31
 )
 

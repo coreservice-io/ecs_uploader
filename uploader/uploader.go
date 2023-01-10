@@ -129,14 +129,18 @@ func (upl *Uploader) uploadLog_Async(indexName string) {
 			}
 			bulkresponse, req_err := bulkRequest.Do(context.Background())
 			if req_err != nil {
+				if upl.logger != nil {
+					upl.logger.Errorln("uploadLog_Async request error :", req_err.Error())
+				}
 				time.Sleep(15 * time.Second)
-				upl.logger.Errorln("uploadLog_Async request error :", req_err.Error())
+				continue
 			}
+			// failed and succeeded may both exist at the same time
 			if len(bulkresponse.Failed()) > 0 {
-				time.Sleep(15 * time.Second)
 				if upl.logger != nil {
 					upl.logger.Errorln("uploadLog_Async failed count :", len(bulkresponse.Failed()))
 				}
+				time.Sleep(15 * time.Second)
 			}
 			if len(bulkresponse.Succeeded()) > 0 {
 				if upl.logger != nil {
@@ -156,8 +160,9 @@ func (upl *Uploader) uploadLog_Async(indexName string) {
 				)
 			}
 		}
+
 		//wait and add
-		if len(upl.logs[indexName]) == 0 {
+		if len(upl.logs[indexName]) <= 10 {
 			time.Sleep(5 * time.Second)
 		}
 	}

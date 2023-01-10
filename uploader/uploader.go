@@ -17,7 +17,7 @@ import (
 
 const uecs_uploader = "uecs_uploader"
 
-//if Id string field is ok ,return the trimed version of it
+// if Id string field is ok ,return the trimed version of it
 func checkStringIdField(Iface interface{}) (string, error) {
 	ValueIface := reflect.ValueOf(Iface)
 
@@ -54,7 +54,7 @@ func checkStringIdField(Iface interface{}) (string, error) {
 	return trimvalue, nil
 }
 
-//batch upload every 50
+// batch upload every 50
 const UPLOAD_DEFAULT_SIZE = 100
 
 type Uploader struct {
@@ -73,7 +73,7 @@ func (upl *Uploader) GetLogger() log.Logger {
 	return upl.logger
 }
 
-//logs may get lost if upload failed
+// logs may get lost if upload failed
 func (upl *Uploader) AddLog_Async_Unsafe(indexName string, log interface{}) error {
 	idstr, iderr := checkStringIdField(log)
 	if iderr != nil {
@@ -127,9 +127,13 @@ func (upl *Uploader) uploadLog_Async(indexName string) {
 			if upl.logger != nil {
 				upl.logger.Debugln("uploadLog_Async  toUploadSize :", toUploadSize)
 			}
-			bulkresponse, _ := bulkRequest.Do(context.Background())
+			bulkresponse, req_err := bulkRequest.Do(context.Background())
+			if req_err != nil {
+				time.Sleep(15 * time.Second)
+				upl.logger.Errorln("uploadLog_Async request error :", req_err.Error())
+			}
 			if len(bulkresponse.Failed()) > 0 {
-				time.Sleep(30 * time.Second)
+				time.Sleep(15 * time.Second)
 				if upl.logger != nil {
 					upl.logger.Errorln("uploadLog_Async failed count :", len(bulkresponse.Failed()))
 				}
@@ -152,7 +156,6 @@ func (upl *Uploader) uploadLog_Async(indexName string) {
 				)
 			}
 		}
-
 		//wait and add
 		if len(upl.logs[indexName]) == 0 {
 			time.Sleep(5 * time.Second)
@@ -174,7 +177,11 @@ func (upl *Uploader) AddLogs_Sync(indexName string, logs []interface{}) (succeed
 		reqi := elastic.NewBulkIndexRequest().Index(indexName).Doc(logs[i]).Id(idstr)
 		bulkRequest.Add(reqi)
 	}
-	resp, _ := bulkRequest.Do(context.Background())
+	resp, bulk_req_err := bulkRequest.Do(context.Background())
+	if bulk_req_err != nil {
+		return []string{}, errors.New("addLogs_Sync request err:" + bulk_req_err.Error())
+	}
+
 	succeeded := resp.Succeeded()
 	for i := 0; i < len(succeeded); i++ {
 		succeededIds = append(succeededIds, succeeded[i].Id)

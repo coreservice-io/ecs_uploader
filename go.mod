@@ -3,10 +3,10 @@ module github.com/coreservice-io/ecs_uploader
 go 1.17
 
 require (
-	github.com/coreservice-io/job v0.1.20
-	github.com/coreservice-io/log v0.1.18
-	github.com/coreservice-io/logrus_log v0.1.20
-	github.com/coreservice-io/safe_go v0.1.4
+	github.com/coreservice-io/job v0.2.1
+	github.com/coreservice-io/log v0.2.1
+	github.com/coreservice-io/logrus_log v0.2.1
+	github.com/coreservice-io/safe_go v0.2.1
 	github.com/olivere/elastic/v7 v7.0.31
 )
 

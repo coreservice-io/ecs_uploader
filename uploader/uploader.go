@@ -237,24 +237,24 @@ func (upl *Uploader) start() {
 			_, ok := upl.logs_started.Load(lmkindex)
 			if !ok {
 				upl.logs_started.Store(lmkindex, true)
-				job.Start(uecs_uploader,
-					func() {
+				job.Start(
+					uecs_uploader,
+					job.TYPE_PANIC_REDO,
+					2,
+					nil,
+					nil,
+					func(j *job.Job) {
 						// job process
 						upl.uploadLog_Async(lmkindex)
-					}, func(err interface{}) {
+					},
+					func(j *job.Job, err interface{}) {
 						// onPanic callback, run if panic happened
 						if upl != nil {
 							upl.logger.Errorln(uecs_uploader, err)
 						}
 						time.Sleep(30 * time.Second)
 					},
-					2, job.TYPE_PANIC_REDO,
-					func(job *job.Job) bool {
-						//check to continue
-						return true
-					}, func(inst *job.Job) {
-						//finally
-					},
+					nil,
 				)
 			}
 		}

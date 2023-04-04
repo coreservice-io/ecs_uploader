@@ -238,6 +238,7 @@ func (upl *Uploader) start() {
 			if !ok {
 				upl.logs_started.Store(lmkindex, true)
 				job.Start(
+					context.Background(),
 					uecs_uploader,
 					job.TYPE_PANIC_REDO,
 					2,
